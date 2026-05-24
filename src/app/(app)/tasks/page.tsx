@@ -1,4 +1,4 @@
-// Version: 1.6
+// Version: 1.7
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
@@ -6,11 +6,12 @@ import { listTasks, listClients, listProjects, listDesigners } from "@/lib/queri
 import { TopBar } from "@/components/TopBar";
 import { PageHeader } from "@/components/PageHeader";
 import { TaskCard } from "@/components/TaskCard";
-import { Inbox, Filter, Hash } from "lucide-react";
+import { CheckSquare, Filter, Hash } from "lucide-react";
 import { NewTaskQuick } from "@/components/NewTaskQuick";
 
 const FILTERS = [
   { key: "all", label: "All" },
+  { key: "project", label: "Projects" },
   { key: "social_media", label: "Social Media" },
   { key: "adhoc", label: "Ad-hoc" },
 ];
@@ -27,9 +28,9 @@ export default async function TasksPage({
   const scope = sp.scope === "all" && user.role === "admin" ? "all" : "mine";
   const category = sp.category && sp.category !== "all" ? sp.category : undefined;
 
-  // Inbox = non-project tasks only (social_media + adhoc)
+  // Personal queue = ALL tasks assigned to me, across categories.
+  // (Project tasks still ALSO live inside their project page — this is the cross-cutting view.)
   const baseFilter = {
-    excludeProject: true,
     ...(scope === "mine" ? { assigneeId: user.id } : {}),
     ...(category ? { category } : {}),
   };
@@ -42,27 +43,28 @@ export default async function TasksPage({
   const inProg = tasks.filter((t) => t.status === "in_progress");
   const done = tasks.filter((t) => t.status === "done");
 
+  const title = scope === "all" ? "All Tasks" : user.role === "designer" ? "My Tasks" : "Tasks";
+
   return (
     <>
       <TopBar
         user={user}
-        title="Inbox"
+        title={title}
         subtitle={
-          scope === "mine"
-            ? "Tasks not tied to a specific project"
-            : "All team inbox tasks (social + ad-hoc)"
+          scope === "all"
+            ? "Across the whole team"
+            : "Your daily queue — projects, social, ad-hoc"
         }
       />
       <main className="p-6 max-w-7xl mx-auto w-full">
         <PageHeader
-          title="Inbox"
-          subtitle="Social media, ad-hoc, and other work that doesn't belong to a specific brand project. Project tasks live inside their project."
+          title={title}
+          subtitle="Everything assigned to you across projects, social media, and ad-hoc work."
           actions={
             <NewTaskQuick
               designers={designers}
               projects={projects}
               defaultAssignee={user.id}
-              inboxOnly
             />
           }
         />
@@ -114,12 +116,9 @@ export default async function TasksPage({
 
         {tasks.length === 0 ? (
           <div className="card p-12 text-center bg-dotgrid">
-            <Inbox size={28} className="mx-auto text-ink-3 mb-3" />
+            <CheckSquare size={28} className="mx-auto text-ink-3 mb-3" />
             <div className="text-base font-semibold">Inbox zero.</div>
-            <div className="text-sm text-ink-2 mt-1 max-w-md mx-auto">
-              Use this for social media content, internal admin tasks, or anything else
-              that isn't tied to a brand project.
-            </div>
+            <div className="text-sm text-ink-2 mt-1">Nothing assigned to you right now.</div>
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-4">

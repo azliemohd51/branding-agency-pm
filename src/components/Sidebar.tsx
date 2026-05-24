@@ -1,4 +1,4 @@
-// Version: 1.6
+// Version: 1.7
 "use client";
 
 import Link from "next/link";
@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FolderKanban,
-  Inbox,
+  CheckSquare,
   Users,
   UserCog,
   Settings,
@@ -15,18 +15,20 @@ import {
 import type { SessionUser } from "@/lib/types";
 
 const itemsByRole = {
+  // Admin = the studio owner / head of creative. Sees everything, manages projects.
   admin: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/projects", label: "Projects", icon: FolderKanban },
-    { href: "/tasks", label: "Inbox", icon: Inbox },
+    { href: "/tasks", label: "Tasks", icon: CheckSquare },
     { href: "/clients", label: "Clients", icon: Building2 },
     { href: "/team", label: "Team", icon: UserCog },
     { href: "/settings/pipeline", label: "Pipeline", icon: Settings },
   ],
+  // Designer = task-focused. Their daily queue lives at the top.
   designer: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/tasks", label: "My Tasks", icon: CheckSquare },
     { href: "/projects", label: "Projects", icon: FolderKanban },
-    { href: "/tasks", label: "Inbox", icon: Inbox },
     { href: "/clients", label: "Clients", icon: Building2 },
     { href: "/team", label: "Team", icon: UserCog },
   ],
@@ -80,7 +82,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
 
       <div className="p-4 border-t border-line">
         <div className="text-[10px] uppercase tracking-widest text-ink-3">Version</div>
-        <div className="font-mono text-xs text-ink-2 mt-0.5">v1.6</div>
+        <div className="font-mono text-xs text-ink-2 mt-0.5">v1.7</div>
       </div>
     </aside>
   );
