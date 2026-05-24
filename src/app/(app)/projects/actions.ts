@@ -288,6 +288,90 @@ export async function createClient(formData: FormData) {
   redirect(`/clients/${Number(r.lastInsertRowid)}`);
 }
 
+// ===== Inline-edit field updates =====
+
+const PROJECT_FIELD_TRANSFORMS: Record<string, (v: string | null) => unknown> = {
+  name: (v) => (v ?? "").trim(),
+  brief_url: (v) => (v && v.trim()) || null,
+  description: (v) => (v && v.trim()) || null,
+  client_id: (v) => (v ? Number(v) : null),
+  owner_id: (v) => (v ? Number(v) : null),
+  current_stage_id: (v) => (v ? Number(v) : null),
+  priority: (v) => v ?? "med",
+  status: (v) => v ?? "active",
+  budget: (v) => (v ? Number(v) : null),
+  deadline: (v) => (v ? parseDateInput(v) : null),
+};
+
+export async function updateProjectField(id: number, field: string, value: string | null) {
+  const user = await requireUser();
+  if (user.role === "client") throw new Error("Forbidden");
+  if (!(field in PROJECT_FIELD_TRANSFORMS)) throw new Error("Invalid field: " + field);
+  const transformed = PROJECT_FIELD_TRANSFORMS[field](value);
+  getDb().prepare(`UPDATE projects SET ${field} = ? WHERE id = ?`).run(transformed as never, id);
+  revalidatePath("/projects");
+  revalidatePath(`/projects/${id}`);
+  revalidatePath("/dashboard");
+}
+
+const TASK_FIELD_TRANSFORMS: Record<string, (v: string | null) => unknown> = {
+  title: (v) => (v ?? "").trim(),
+  description: (v) => (v && v.trim()) || null,
+  assignee_id: (v) => (v ? Number(v) : null),
+  due_date: (v) => (v ? parseDateInput(v) : null),
+  status: (v) => v ?? "todo",
+  priority: (v) => v ?? "med",
+};
+
+export async function updateTaskField(id: number, field: string, value: string | null) {
+  const user = await requireUser();
+  if (user.role === "client") throw new Error("Forbidden");
+  if (!(field in TASK_FIELD_TRANSFORMS)) throw new Error("Invalid field: " + field);
+  const transformed = TASK_FIELD_TRANSFORMS[field](value);
+  getDb().prepare(`UPDATE tasks SET ${field} = ? WHERE id = ?`).run(transformed as never, id);
+  const row = getDb().prepare("SELECT project_id FROM tasks WHERE id = ?").get(id) as { project_id: number | null };
+  revalidatePath("/projects");
+  revalidatePath("/tasks");
+  if (row?.project_id) revalidatePath(`/projects/${row.project_id}`);
+  revalidatePath("/dashboard");
+}
+
+// ===== Custom columns =====
+
+export async function addCustomColumn(formData: FormData) {
+  await requireRole("admin");
+  const name = String(formData.get("name") || "").trim();
+  const type = String(formData.get("type") || "text") as "text" | "number" | "date" | "url";
+  if (!name) throw new Error("Name required");
+  if (!["text", "number", "date", "url"].includes(type)) throw new Error("Invalid type");
+  const db = getDb();
+  const maxPos = (db.prepare("SELECT COALESCE(MAX(position), 0) as m FROM custom_columns").get() as { m: number }).m;
+  db.prepare("INSERT INTO custom_columns (name, type, position) VALUES (?,?,?)").run(name, type, maxPos + 1);
+  revalidatePath("/projects");
+}
+
+export async function deleteCustomColumn(id: number) {
+  await requireRole("admin");
+  getDb().prepare("DELETE FROM custom_columns WHERE id = ?").run(id);
+  revalidatePath("/projects");
+}
+
+export async function setCustomColumnValue(columnId: number, projectId: number, value: string | null) {
+  const user = await requireUser();
+  if (user.role === "client") throw new Error("Forbidden");
+  const db = getDb();
+  const v = value && value.trim() ? value.trim() : null;
+  if (v === null) {
+    db.prepare("DELETE FROM custom_column_values WHERE column_id = ? AND project_id = ?").run(columnId, projectId);
+  } else {
+    db.prepare(
+      `INSERT INTO custom_column_values (column_id, project_id, value) VALUES (?,?,?)
+       ON CONFLICT(column_id, project_id) DO UPDATE SET value = excluded.value`
+    ).run(columnId, projectId, v);
+  }
+  revalidatePath("/projects");
+}
+
 export async function updateClient(formData: FormData) {
   await requireRole("admin");
   const id = Number(formData.get("id"));

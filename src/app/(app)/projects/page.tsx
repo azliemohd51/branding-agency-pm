@@ -1,7 +1,15 @@
-// Version: 1.2
+// Version: 1.4
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
-import { listProjects, listStages, listTasks } from "@/lib/queries";
+import {
+  listProjects,
+  listStages,
+  listTasks,
+  listClients,
+  listAllUsers,
+  listCustomColumns,
+  getCustomColumnValuesMap,
+} from "@/lib/queries";
 import { TopBar } from "@/components/TopBar";
 import { PageHeader } from "@/components/PageHeader";
 import { ProjectsTable } from "@/components/ProjectsTable";
@@ -35,6 +43,11 @@ export default async function ProjectsPage({
       tasksByProject.get(t.project_id)!.push(t);
     }
   }
+
+  const clients = listClients();
+  const users = listAllUsers();
+  const customColumns = listCustomColumns();
+  const customValues = getCustomColumnValuesMap();
 
   return (
     <>
@@ -88,7 +101,12 @@ export default async function ProjectsPage({
             stages={stages}
             projects={filtered}
             tasksByProject={tasksByProject}
-            canCreate={user.role === "admin"}
+            clients={clients}
+            users={users}
+            customColumns={customColumns}
+            customValues={customValues}
+            canEdit={user.role === "admin" || user.role === "designer"}
+            isAdmin={user.role === "admin"}
           />
         )}
       </main>

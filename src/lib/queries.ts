@@ -11,6 +11,7 @@ import type {
   Feedback,
   User,
   SessionUser,
+  CustomColumn,
 } from "./types";
 
 export function listStages(): PipelineStage[] {
@@ -237,6 +238,26 @@ export interface DesignerWorkload extends User {
   active_projects: number;
   open_tasks: number;
   upcoming_deadline: number | null;
+}
+
+export function listCustomColumns(): CustomColumn[] {
+  return getDb()
+    .prepare("SELECT * FROM custom_columns ORDER BY position ASC, id ASC")
+    .all() as CustomColumn[];
+}
+
+/** Returns a map: project_id -> { column_id -> value } */
+export function getCustomColumnValuesMap(): Map<number, Map<number, string>> {
+  const rows = getDb()
+    .prepare("SELECT column_id, project_id, value FROM custom_column_values")
+    .all() as { column_id: number; project_id: number; value: string | null }[];
+  const out = new Map<number, Map<number, string>>();
+  for (const r of rows) {
+    if (r.value == null) continue;
+    if (!out.has(r.project_id)) out.set(r.project_id, new Map());
+    out.get(r.project_id)!.set(r.column_id, r.value);
+  }
+  return out;
 }
 
 export function listDesignerWorkload(): DesignerWorkload[] {

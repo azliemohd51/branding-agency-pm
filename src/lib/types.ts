@@ -110,3 +110,19 @@ export interface Feedback {
   resolved: number;
   created_at: number;
 }
+
+export type CustomColumnType = "text" | "number" | "date" | "url";
+
+export interface CustomColumn {
+  id: number;
+  name: string;
+  type: CustomColumnType;
+  position: number;
+  created_at: number;
+}
+
+export interface CustomColumnValue {
+  column_id: number;
+  project_id: number;
+  value: string | null;
+}

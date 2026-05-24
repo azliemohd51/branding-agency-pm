@@ -127,6 +127,24 @@ function migrate(db: Database.Database) {
   if (!colNames.has("brief_url")) db.exec("ALTER TABLE projects ADD COLUMN brief_url TEXT");
   if (!colNames.has("owner_id")) db.exec("ALTER TABLE projects ADD COLUMN owner_id INTEGER REFERENCES users(id)");
   if (!colNames.has("priority")) db.exec("ALTER TABLE projects ADD COLUMN priority TEXT DEFAULT 'med'");
+
+  // v1.4 — custom columns
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS custom_columns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL CHECK (type IN ('text','number','date','url')),
+      position INTEGER NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+    CREATE TABLE IF NOT EXISTS custom_column_values (
+      column_id INTEGER NOT NULL REFERENCES custom_columns(id) ON DELETE CASCADE,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      value TEXT,
+      PRIMARY KEY (column_id, project_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_ccv_project ON custom_column_values(project_id);
+  `);
 }
 
 export function nowSec(): number {
