@@ -1,7 +1,7 @@
-// Version: 1.5
+// Version: 1.8
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -24,6 +24,7 @@ import {
   updateTaskField,
   setCustomColumnValue,
   deleteCustomColumn,
+  createTask,
 } from "@/app/(app)/projects/actions";
 
 // Build a CSS grid template for the project rows.
@@ -560,24 +561,150 @@ function SubtasksBlock({
             ))
           )}
 
-          {/* + Add subitem footer row */}
-          <Link
-            href={`/projects/${projectId}?tab=tasks`}
-            className="block border-t border-line"
+          {/* + Add subitem inline row */}
+          {canEdit && (
+            <AddSubitemRow
+              projectId={projectId}
+              subGridCols={subGridCols}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Inline-add subitem row — click to start, type title, Enter to save, Esc to cancel.
+function AddSubitemRow({
+  projectId,
+  subGridCols,
+}: {
+  projectId: number;
+  subGridCols: string;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [title, setTitle] = useState("");
+  const [pending, start] = useTransition();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (adding) inputRef.current?.focus();
+  }, [adding]);
+
+  const submit = (keepAdding: boolean) => {
+    const t = title.trim();
+    if (!t) {
+      setAdding(false);
+      setTitle("");
+      return;
+    }
+    start(async () => {
+      const fd = new FormData();
+      fd.set("category", "project");
+      fd.set("project_id", String(projectId));
+      fd.set("title", t);
+      fd.set("priority", "med");
+      await createTask(fd);
+      setTitle("");
+      if (keepAdding) {
+        // refocus next iteration
+        requestAnimationFrame(() => inputRef.current?.focus());
+      } else {
+        setAdding(false);
+      }
+    });
+  };
+
+  if (!adding) {
+    return (
+      <button
+        onClick={() => setAdding(true)}
+        className="w-full text-left border-t border-line"
+      >
+        <div
+          className="grid items-stretch hover:bg-bg-2/40 transition"
+          style={{ gridTemplateColumns: subGridCols, minWidth: "fit-content" }}
+        >
+          <Cell border="r" center>
+            <FakeCheckbox disabled />
+          </Cell>
+          <div className="px-3 py-2.5 text-[13px] text-ink-3 hover:text-accent transition">
+            + Add subitem
+          </div>
+          <div></div>
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <div className="border-t border-line">
+      <div
+        className={`grid items-stretch bg-bg-1 transition ${pending ? "opacity-60" : ""}`}
+        style={{ gridTemplateColumns: subGridCols, minWidth: "fit-content" }}
+      >
+        <Cell border="r" center>
+          <FakeCheckbox disabled />
+        </Cell>
+        <Cell border="r">
+          <input
+            ref={inputRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit(true); // save + keep adding next
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setAdding(false);
+                setTitle("");
+              } else if (e.key === "Tab") {
+                // let tab work naturally
+              }
+            }}
+            onBlur={() => submit(false)}
+            placeholder="What needs doing? (Enter to save, Esc to cancel)"
+            className="w-full text-[13px] bg-transparent border-none outline-none text-ink-0 placeholder:text-ink-3 px-1"
+          />
+        </Cell>
+        <Cell border="r" center>
+          <span className="inline-flex items-center justify-center text-[12px] font-semibold rounded-md py-1.5 px-3 bg-bg-3 text-ink-3 min-w-[120px]">
+            Todo
+          </span>
+        </Cell>
+        <Cell border="r" center>
+          <EmptyAvatar size={22} />
+        </Cell>
+        <Cell border="r" center>
+          <span className="text-[12px] text-ink-3 italic">—</span>
+        </Cell>
+        <div className="flex items-center justify-center gap-0.5 px-1">
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              submit(true);
+            }}
+            title="Save (Enter)"
+            className="size-6 grid place-items-center text-success hover:bg-bg-2 rounded transition"
           >
-            <div
-              className="grid items-stretch hover:bg-bg-2/40 transition"
-              style={{ gridTemplateColumns: subGridCols, minWidth: "fit-content" }}
-            >
-              <Cell border="r" center>
-                <FakeCheckbox disabled />
-              </Cell>
-              <div className="px-3 py-2.5 text-[13px] text-ink-3 hover:text-accent transition">
-                + Add subitem
-              </div>
-              <div></div>
-            </div>
-          </Link>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setAdding(false);
+              setTitle("");
+            }}
+            title="Cancel (Esc)"
+            className="size-6 grid place-items-center text-ink-3 hover:bg-bg-2 hover:text-danger rounded transition"
+          >
+            <X size={14} />
+          </button>
         </div>
       </div>
     </div>

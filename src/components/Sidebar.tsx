@@ -1,4 +1,4 @@
-// Version: 1.7
+// Version: 1.8
 "use client";
 
 import Link from "next/link";
@@ -82,7 +82,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
 
       <div className="p-4 border-t border-line">
         <div className="text-[10px] uppercase tracking-widest text-ink-3">Version</div>
-        <div className="font-mono text-xs text-ink-2 mt-0.5">v1.7</div>
+        <div className="font-mono text-xs text-ink-2 mt-0.5">v1.8</div>
       </div>
     </aside>
   );
