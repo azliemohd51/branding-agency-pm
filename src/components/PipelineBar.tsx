@@ -59,7 +59,7 @@ export function PipelineBar({
                   className="size-8 rounded-full grid place-items-center transition-all"
                   style={{
                     background: isPast || isCurrent ? s.color : "transparent",
-                    border: `2px solid ${isFuture ? "#3a3a44" : s.color}`,
+                    border: `2px solid ${isFuture ? "#cdd1dc" : s.color}`,
                     boxShadow: isCurrent ? `0 0 0 4px ${s.color}33, 0 0 16px ${s.color}66` : "none",
                   }}
                 >
@@ -80,8 +80,8 @@ export function PipelineBar({
                   style={{
                     background: isPast
                       ? s.color
-                      : "linear-gradient(to right, #3a3a44, #2a2a31)",
-                    opacity: isPast ? 0.7 : 0.4,
+                      : "linear-gradient(to right, #d1d5db, #e5e7eb)",
+                    opacity: isPast ? 0.8 : 0.7,
                   }}
                 />
               )}

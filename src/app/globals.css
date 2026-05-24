@@ -1,4 +1,4 @@
-/* Version: 1.0 */
+/* Version: 1.3 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,7 +20,7 @@
     color: inherit;
   }
   ::selection {
-    background: rgba(124, 92, 255, 0.35);
+    background: rgba(124, 92, 255, 0.22);
   }
   /* Scrollbars */
   ::-webkit-scrollbar {
@@ -31,25 +31,25 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #2a2a31;
+    background: #cdd1dc;
     border-radius: 10px;
-    border: 2px solid #0c0c0e;
+    border: 2px solid #f6f7fb;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a44;
+    background: #a5a7b3;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border border-line bg-bg-2 shadow-card;
+    @apply rounded-xl border border-line bg-bg-1 shadow-card;
   }
   .card-hover {
-    @apply hover:bg-bg-3 hover:border-line-strong transition-colors;
+    @apply hover:bg-bg-2 hover:border-line-strong transition-colors;
   }
   .input {
-    @apply w-full rounded-lg border border-line bg-bg-3 px-3 py-2 text-ink-0 placeholder:text-ink-3
-           focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60 transition;
+    @apply w-full rounded-lg border border-line bg-bg-1 px-3 py-2 text-ink-0 placeholder:text-ink-3
+           focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 transition;
   }
   .label {
     @apply text-xs font-medium uppercase tracking-wider text-ink-2 mb-1.5 block;
@@ -59,16 +59,16 @@
            focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-accent text-white hover:bg-accent-hover shadow-[0_0_0_1px_rgba(124,92,255,0.4),0_8px_16px_-4px_rgba(124,92,255,0.4)];
+    @apply btn bg-accent text-white hover:bg-accent-hover shadow-[0_1px_2px_rgba(124,92,255,0.4),0_6px_14px_-4px_rgba(124,92,255,0.5)];
   }
   .btn-secondary {
-    @apply btn bg-bg-3 text-ink-0 border border-line hover:bg-bg-4 hover:border-line-strong;
+    @apply btn bg-bg-1 text-ink-0 border border-line hover:bg-bg-2 hover:border-line-strong;
   }
   .btn-ghost {
-    @apply btn text-ink-1 hover:bg-bg-3 hover:text-ink-0;
+    @apply btn text-ink-1 hover:bg-bg-2 hover:text-ink-0;
   }
   .btn-danger {
-    @apply btn bg-danger/15 text-danger border border-danger/30 hover:bg-danger/25;
+    @apply btn bg-danger/10 text-danger border border-danger/30 hover:bg-danger/15;
   }
   .pill {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium border;
@@ -106,8 +106,8 @@
   }
 }
 
-/* Dotted grid background for empty states / hero */
+/* Dotted grid background for empty states / hero — dark dots on light bg */
 .bg-dotgrid {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(15, 17, 26, 0.06) 1px, transparent 1px);
   background-size: 18px 18px;
 }
