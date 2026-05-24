@@ -8,7 +8,7 @@ import { requireUser, requireRole } from "@/lib/session";
 import { parseDateInput } from "@/lib/format";
 
 export async function createProject(formData: FormData) {
-  await requireRole("admin");
+  const user = await requireRole("admin");
   const db = getDb();
   const name = String(formData.get("name") || "").trim();
   const client_id = Number(formData.get("client_id"));
@@ -17,16 +17,20 @@ export async function createProject(formData: FormData) {
   const deadline = parseDateInput(formData.get("deadline") as string);
   const budgetRaw = formData.get("budget") as string;
   const budget = budgetRaw ? Number(budgetRaw) : null;
+  const brief_url = String(formData.get("brief_url") || "").trim() || null;
+  const ownerRaw = formData.get("owner_id") as string;
+  const owner_id = ownerRaw ? Number(ownerRaw) : user.id;
+  const priority = (String(formData.get("priority") || "med") as "low" | "med" | "high");
   const assignees = formData.getAll("assignees").map((v) => Number(v));
 
   if (!name || !client_id || !current_stage_id) throw new Error("Missing required fields");
 
   const r = db
     .prepare(
-      `INSERT INTO projects (name, client_id, description, current_stage_id, deadline, budget, status)
-       VALUES (?,?,?,?,?,?, 'active')`
+      `INSERT INTO projects (name, client_id, description, current_stage_id, deadline, budget, status, brief_url, owner_id, priority)
+       VALUES (?,?,?,?,?,?, 'active', ?,?,?)`
     )
-    .run(name, client_id, description, current_stage_id, deadline, budget);
+    .run(name, client_id, description, current_stage_id, deadline, budget, brief_url, owner_id, priority);
   const projectId = Number(r.lastInsertRowid);
 
   const insAssign = db.prepare("INSERT OR IGNORE INTO project_assignments (project_id, user_id) VALUES (?,?)");
@@ -35,6 +39,21 @@ export async function createProject(formData: FormData) {
   revalidatePath("/projects");
   revalidatePath("/dashboard");
   redirect(`/projects/${projectId}`);
+}
+
+export async function updateProjectMeta(formData: FormData) {
+  await requireRole("admin", "designer");
+  const id = Number(formData.get("id"));
+  if (!id) return;
+  const brief_url = String(formData.get("brief_url") || "").trim() || null;
+  const ownerRaw = formData.get("owner_id") as string;
+  const owner_id = ownerRaw ? Number(ownerRaw) : null;
+  const priority = String(formData.get("priority") || "med");
+  getDb()
+    .prepare("UPDATE projects SET brief_url = ?, owner_id = ?, priority = ? WHERE id = ?")
+    .run(brief_url, owner_id, priority, id);
+  revalidatePath("/projects");
+  revalidatePath(`/projects/${id}`);
 }
 
 export async function advanceStage(projectId: number, stageId: number) {

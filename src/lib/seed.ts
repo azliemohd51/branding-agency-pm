@@ -93,8 +93,8 @@ function seed() {
 
   // Projects (assign to stages 0-indexed into stageIds)
   const insProject = db.prepare(`
-    INSERT INTO projects (name, client_id, description, current_stage_id, deadline, budget, status)
-    VALUES (?,?,?,?,?,?,?)
+    INSERT INTO projects (name, client_id, description, current_stage_id, deadline, budget, status, brief_url, owner_id, priority)
+    VALUES (?,?,?,?,?,?,?,?,?,?)
   `);
   const insAssign = db.prepare("INSERT INTO project_assignments (project_id, user_id) VALUES (?,?)");
 
@@ -106,7 +106,10 @@ function seed() {
       stageIds[2], // Design
       now + day * 12,
       15000,
-      "active"
+      "active",
+      "https://notion.so/acme-brand-brief",
+      adminId,
+      "high"
     ).lastInsertRowid
   );
   insAssign.run(p1, d1Id);
@@ -120,7 +123,10 @@ function seed() {
       stageIds[1], // Strategy
       now + day * 30,
       22000,
-      "active"
+      "active",
+      "https://docs.google.com/document/verda-brief",
+      adminId,
+      "med"
     ).lastInsertRowid
   );
   insAssign.run(p2, d1Id);
@@ -134,7 +140,10 @@ function seed() {
       stageIds[3], // Refinement
       now + day * 6,
       8500,
-      "active"
+      "active",
+      "https://figma.com/file/northbound-signage-brief",
+      d2Id,
+      "high"
     ).lastInsertRowid
   );
   insAssign.run(p3, d2Id);
@@ -147,7 +156,10 @@ function seed() {
       stageIds[0], // Discovery
       now + day * 21,
       4500,
-      "active"
+      "active",
+      null,
+      d1Id,
+      "low"
     ).lastInsertRowid
   );
   insAssign.run(p4, d1Id);
@@ -160,7 +172,10 @@ function seed() {
       stageIds[5], // Completed
       now - day * 30,
       18000,
-      "completed"
+      "completed",
+      "https://figma.com/file/northbound-identity",
+      d2Id,
+      "med"
     ).lastInsertRowid
   );
   insAssign.run(p5, d2Id);

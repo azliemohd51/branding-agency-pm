@@ -57,6 +57,9 @@ export interface Project {
   deadline: number | null;
   budget: number | null;
   status: ProjectStatus;
+  brief_url: string | null;
+  owner_id: number | null;
+  priority: TaskPriority;
   created_at: number;
 }
 

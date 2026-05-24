@@ -1,12 +1,11 @@
-// Version: 1.0
+// Version: 1.2
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
-import { listProjects, listStages } from "@/lib/queries";
+import { listProjects, listStages, listTasks } from "@/lib/queries";
 import { TopBar } from "@/components/TopBar";
 import { PageHeader } from "@/components/PageHeader";
-import { StagePill, StatusPill } from "@/components/Pill";
-import { relativeDeadline, formatMoney } from "@/lib/format";
-import { Plus, Search, FolderKanban } from "lucide-react";
+import { ProjectsTable } from "@/components/ProjectsTable";
+import { Plus, FolderKanban } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export default async function ProjectsPage({
@@ -27,14 +26,23 @@ export default async function ProjectsPage({
     return true;
   });
 
-  const grouped = stages.map((s) => ({
-    stage: s,
-    projects: filtered.filter((p) => p.current_stage_id === s.id),
-  }));
+  // Pre-fetch tasks grouped by project (one query, then bucket)
+  const allTasks = listTasks();
+  const tasksByProject = new Map<number, typeof allTasks>();
+  for (const t of allTasks) {
+    if (t.project_id) {
+      if (!tasksByProject.has(t.project_id)) tasksByProject.set(t.project_id, []);
+      tasksByProject.get(t.project_id)!.push(t);
+    }
+  }
 
   return (
     <>
-      <TopBar user={user} title="Projects" subtitle={`${filtered.length} of ${allProjects.length}`} />
+      <TopBar
+        user={user}
+        title="Projects"
+        subtitle={`${filtered.length} of ${allProjects.length}`}
+      />
       <main className="p-6 max-w-7xl mx-auto w-full">
         <PageHeader
           title="Projects"
@@ -49,7 +57,7 @@ export default async function ProjectsPage({
         />
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-5">
           <FilterPill href="/projects" label="All stages" active={!sp.stage} />
           {stages.map((s) => (
             <FilterPill
@@ -66,7 +74,9 @@ export default async function ProjectsPage({
           <div className="card p-12 text-center bg-dotgrid">
             <FolderKanban size={28} className="mx-auto text-ink-3 mb-3" />
             <div className="text-base font-semibold">No projects yet.</div>
-            <div className="text-sm text-ink-2 mt-1 mb-5">Spin up your first brand engagement.</div>
+            <div className="text-sm text-ink-2 mt-1 mb-5">
+              Spin up your first brand engagement.
+            </div>
             {user.role === "admin" && (
               <Link href="/projects/new" className="btn-primary inline-flex">
                 <Plus size={16} /> New project
@@ -74,69 +84,12 @@ export default async function ProjectsPage({
             )}
           </div>
         ) : (
-          <div className="space-y-7">
-            {grouped.map(({ stage, projects }) =>
-              projects.length === 0 ? null : (
-                <div key={stage.id}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="size-1.5 rounded-full" style={{ background: stage.color }} />
-                    <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: stage.color }}>
-                      {stage.name}
-                    </h2>
-                    <div className="text-xs text-ink-3">({projects.length})</div>
-                    <div className="flex-1 h-px bg-line ml-2" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {projects.map((p) => {
-                      const rd = relativeDeadline(p.deadline);
-                      return (
-                        <Link
-                          key={p.id}
-                          href={`/projects/${p.id}`}
-                          className="card card-hover p-4 group block"
-                        >
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div className="font-semibold tracking-tight truncate group-hover:text-accent transition">
-                              {p.name}
-                            </div>
-                            <StatusPill status={p.status} />
-                          </div>
-                          <div className="text-xs text-ink-2 mb-3">{p.client_name}</div>
-                          <div className="flex items-center justify-between text-[11px]">
-                            <div className="flex items-center gap-2">
-                              <StagePill name={stage.name} color={stage.color} />
-                            </div>
-                            <span
-                              className={`font-medium ${
-                                rd.tone === "overdue"
-                                  ? "text-danger"
-                                  : rd.tone === "soon"
-                                  ? "text-warn"
-                                  : "text-ink-2"
-                              }`}
-                            >
-                              {rd.text}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-line text-[11px] text-ink-2">
-                            <span>{p.team_count} member{p.team_count === 1 ? "" : "s"}</span>
-                            <span>·</span>
-                            <span>{p.task_count} open task{p.task_count === 1 ? "" : "s"}</span>
-                            {p.open_feedback > 0 && (
-                              <>
-                                <span>·</span>
-                                <span className="text-warn">{p.open_feedback} open feedback</span>
-                              </>
-                            )}
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )
-            )}
-          </div>
+          <ProjectsTable
+            stages={stages}
+            projects={filtered}
+            tasksByProject={tasksByProject}
+            canCreate={user.role === "admin"}
+          />
         )}
       </main>
     </>
@@ -162,9 +115,13 @@ function FilterPill({
           ? "bg-bg-3 border-line-strong text-ink-0"
           : "border-line bg-bg-1 text-ink-2 hover:bg-bg-2 hover:text-ink-0"
       }`}
-      style={active && color ? { borderColor: `${color}66`, color, background: `${color}1a` } : {}}
+      style={
+        active && color ? { borderColor: `${color}66`, color, background: `${color}1a` } : {}
+      }
     >
-      {color && active && <span className="size-1.5 rounded-full" style={{ background: color }} />}
+      {color && active && (
+        <span className="size-1.5 rounded-full" style={{ background: color }} />
+      )}
       {label}
     </Link>
   );

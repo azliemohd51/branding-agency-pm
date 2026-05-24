@@ -38,6 +38,8 @@ export interface ProjectWithExtras extends Project {
   team_count: number;
   task_count: number;
   open_feedback: number;
+  owner_name: string | null;
+  owner_color: string | null;
 }
 
 export function listProjects(filter?: { user?: SessionUser; status?: string }): ProjectWithExtras[] {
@@ -49,13 +51,16 @@ export function listProjects(filter?: { user?: SessionUser; status?: string }): 
            s.color AS stage_color,
            s.position AS stage_position,
            s.is_terminal AS stage_is_terminal,
+           o.name AS owner_name,
+           o.avatar_color AS owner_color,
            (SELECT COUNT(*) FROM project_assignments pa WHERE pa.project_id = p.id) AS team_count,
            (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.status != 'done') AS task_count,
            (SELECT COUNT(*) FROM feedback f WHERE f.project_id = p.id AND f.resolved = 0) AS open_feedback
     FROM projects p
     JOIN clients c ON c.id = p.client_id
     JOIN pipeline_stages s ON s.id = p.current_stage_id
-  `;
+    LEFT JOIN users o ON o.id = p.owner_id
+`;
   const where: string[] = [];
   const params: unknown[] = [];
 
@@ -89,12 +94,15 @@ export function getProject(id: number): ProjectWithExtras | undefined {
               s.color AS stage_color,
               s.position AS stage_position,
               s.is_terminal AS stage_is_terminal,
+              o.name AS owner_name,
+              o.avatar_color AS owner_color,
               (SELECT COUNT(*) FROM project_assignments pa WHERE pa.project_id = p.id) AS team_count,
               (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.status != 'done') AS task_count,
               (SELECT COUNT(*) FROM feedback f WHERE f.project_id = p.id AND f.resolved = 0) AS open_feedback
        FROM projects p
        JOIN clients c ON c.id = p.client_id
        JOIN pipeline_stages s ON s.id = p.current_stage_id
+       LEFT JOIN users o ON o.id = p.owner_id
        WHERE p.id = ?`
     )
     .all(id) as ProjectWithExtras[];

@@ -120,6 +120,13 @@ function migrate(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_feedback_project ON feedback(project_id);
     CREATE INDEX IF NOT EXISTS idx_feedback_deliv ON feedback(deliverable_id);
   `);
+
+  // v1.2 — additive migrations on projects (brief_url, owner_id, priority)
+  const cols = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
+  const colNames = new Set(cols.map((c) => c.name));
+  if (!colNames.has("brief_url")) db.exec("ALTER TABLE projects ADD COLUMN brief_url TEXT");
+  if (!colNames.has("owner_id")) db.exec("ALTER TABLE projects ADD COLUMN owner_id INTEGER REFERENCES users(id)");
+  if (!colNames.has("priority")) db.exec("ALTER TABLE projects ADD COLUMN priority TEXT DEFAULT 'med'");
 }
 
 export function nowSec(): number {

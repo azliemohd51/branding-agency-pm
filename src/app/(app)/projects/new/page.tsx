@@ -78,6 +78,32 @@ export default async function NewProjectPage() {
           </div>
 
           <div>
+            <label className="label">Brief link (Notion / Drive / Figma URL)</label>
+            <input name="brief_url" type="url" className="input" placeholder="https://notion.so/..." />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Owner</label>
+              <select name="owner_id" defaultValue={user.id} className="input">
+                {designers.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} · {d.role}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label">Priority</label>
+              <select name="priority" defaultValue="med" className="input">
+                <option value="low">Low</option>
+                <option value="med">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
             <label className="label">Assign team</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {designers.map((d) => (
