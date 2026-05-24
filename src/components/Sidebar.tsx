@@ -1,4 +1,4 @@
-// Version: 1.5
+// Version: 1.6
 "use client";
 
 import Link from "next/link";
@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FolderKanban,
-  CheckSquare,
+  Inbox,
   Users,
   UserCog,
   Settings,
@@ -18,7 +18,7 @@ const itemsByRole = {
   admin: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/projects", label: "Projects", icon: FolderKanban },
-    { href: "/tasks", label: "Tasks", icon: CheckSquare },
+    { href: "/tasks", label: "Inbox", icon: Inbox },
     { href: "/clients", label: "Clients", icon: Building2 },
     { href: "/team", label: "Team", icon: UserCog },
     { href: "/settings/pipeline", label: "Pipeline", icon: Settings },
@@ -26,7 +26,7 @@ const itemsByRole = {
   designer: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/projects", label: "Projects", icon: FolderKanban },
-    { href: "/tasks", label: "My Tasks", icon: CheckSquare },
+    { href: "/tasks", label: "Inbox", icon: Inbox },
     { href: "/clients", label: "Clients", icon: Building2 },
     { href: "/team", label: "Team", icon: UserCog },
   ],
@@ -80,7 +80,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
 
       <div className="p-4 border-t border-line">
         <div className="text-[10px] uppercase tracking-widest text-ink-3">Version</div>
-        <div className="font-mono text-xs text-ink-2 mt-0.5">v1.5</div>
+        <div className="font-mono text-xs text-ink-2 mt-0.5">v1.6</div>
       </div>
     </aside>
   );

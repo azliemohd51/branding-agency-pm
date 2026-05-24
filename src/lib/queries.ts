@@ -132,6 +132,7 @@ export function listTasks(filter?: {
   projectId?: number;
   assigneeId?: number;
   category?: string;
+  excludeProject?: boolean; // when true, only return non-project (social/adhoc) tasks
 }): TaskWithExtras[] {
   const db = getDb();
   let sql = `
@@ -158,6 +159,9 @@ export function listTasks(filter?: {
   if (filter?.category) {
     where.push("t.category = ?");
     params.push(filter.category);
+  }
+  if (filter?.excludeProject) {
+    where.push("t.category != 'project'");
   }
   if (where.length) sql += " WHERE " + where.join(" AND ");
   sql += " ORDER BY (t.status = 'done') ASC, t.due_date IS NULL, t.due_date ASC, t.created_at DESC";

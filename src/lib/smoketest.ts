@@ -38,7 +38,7 @@ async function main() {
     { path: "/dashboard", expect: 200, mustContain: "Active projects" },
     { path: "/projects", expect: 200, mustContain: "Acme Rebrand" },
     { path: "/projects/1", expect: 200, mustContain: "Pipeline" },
-    { path: "/tasks", expect: 200, mustContain: "My Tasks" },
+    { path: "/tasks", expect: 200, mustContain: "Inbox" },
     { path: "/clients", expect: 200, mustContain: "Acme Co" },
     { path: "/clients/1", expect: 200, mustContain: "Brand brief" },
     { path: "/team", expect: 200, mustContain: "Workload" },
@@ -48,9 +48,9 @@ async function main() {
   ]);
 
   await check("Designer", designerCookie, [
-    { path: "/dashboard", expect: 200, mustContain: "My Tasks" },
+    { path: "/dashboard", expect: 200, mustContain: "Up next" },
     { path: "/projects", expect: 200 },
-    { path: "/tasks", expect: 200, mustContain: "Tasks" },
+    { path: "/tasks", expect: 200, mustContain: "Inbox" },
     { path: "/team", expect: 200 },
     { path: "/settings/pipeline", expect: 307 }, // designer should be redirected
   ]);

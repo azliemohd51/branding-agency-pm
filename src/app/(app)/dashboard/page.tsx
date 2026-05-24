@@ -12,7 +12,7 @@ import { TopBar } from "@/components/TopBar";
 import { StagePill, StatusPill } from "@/components/Pill";
 import { Avatar } from "@/components/Avatar";
 import { formatDate, relativeDeadline } from "@/lib/format";
-import { ArrowRight, Folder, CheckSquare, MessageSquare, TrendingUp } from "lucide-react";
+import { ArrowRight, Folder, CheckSquare, MessageSquare, TrendingUp, Inbox } from "lucide-react";
 
 export default async function Dashboard() {
   const user = await requireUser();
@@ -32,7 +32,7 @@ export default async function Dashboard() {
       <TopBar
         user={user}
         title={greeting(user.name)}
-        subtitle={`${activeProjects.length} active project${activeProjects.length === 1 ? "" : "s"} · ${myOpenTasks.length} open task${myOpenTasks.length === 1 ? "" : "s"}`}
+        subtitle={`${activeProjects.length} active project${activeProjects.length === 1 ? "" : "s"} · ${myOpenTasks.length} open item${myOpenTasks.length === 1 ? "" : "s"}`}
       />
 
       <main className="p-6 max-w-7xl mx-auto w-full">
@@ -49,11 +49,11 @@ export default async function Dashboard() {
           <section className="lg:col-span-2 card p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold tracking-tight">My Tasks</h2>
-                <p className="text-xs text-ink-2">Personal queue across all projects</p>
+                <h2 className="text-lg font-bold tracking-tight">Up next</h2>
+                <p className="text-xs text-ink-2">Open tasks assigned to you, across projects and inbox</p>
               </div>
               <Link href="/tasks" className="btn-ghost text-xs">
-                View all <ArrowRight size={12} />
+                <Inbox size={12} /> Open Inbox
               </Link>
             </div>
 

@@ -9,13 +9,17 @@ export function NewTaskQuick({
   designers,
   projects,
   defaultAssignee,
+  inboxOnly = false,
 }: {
   designers: { id: number; name: string }[];
   projects: { id: number; name: string }[];
   defaultAssignee?: number;
+  inboxOnly?: boolean; // when true, only allow social_media / adhoc categories
 }) {
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState<"project" | "social_media" | "adhoc">("project");
+  const [category, setCategory] = useState<"project" | "social_media" | "adhoc">(
+    inboxOnly ? "social_media" : "project"
+  );
 
   if (!open) {
     return (
@@ -41,12 +45,16 @@ export function NewTaskQuick({
         >
           <div>
             <label className="label">Category</label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {([
-                { v: "project", label: "Project", color: "#7c5cff" },
-                { v: "social_media", label: "Social", color: "#ec4899" },
-                { v: "adhoc", label: "Ad-hoc", color: "#f59e0b" },
-              ] as const).map((c) => (
+            <div className={`grid gap-1.5 ${inboxOnly ? "grid-cols-2" : "grid-cols-3"}`}>
+              {(
+                [
+                  ...(inboxOnly
+                    ? []
+                    : [{ v: "project" as const, label: "Project", color: "#7c5cff" }]),
+                  { v: "social_media" as const, label: "Social", color: "#ec4899" },
+                  { v: "adhoc" as const, label: "Ad-hoc", color: "#f59e0b" },
+                ] as const
+              ).map((c) => (
                 <button
                   type="button"
                   key={c.v}
@@ -54,11 +62,11 @@ export function NewTaskQuick({
                   className={`text-xs px-2 py-2 rounded-lg border transition ${
                     category === c.v
                       ? "border-line-strong"
-                      : "border-line bg-bg-3 text-ink-2 hover:bg-bg-4"
+                      : "border-line bg-bg-1 text-ink-2 hover:bg-bg-2"
                   }`}
                   style={
                     category === c.v
-                      ? { background: `${c.color}1f`, color: c.color, borderColor: `${c.color}66` }
+                      ? { background: `${c.color}15`, color: c.color, borderColor: `${c.color}66` }
                       : {}
                   }
                 >

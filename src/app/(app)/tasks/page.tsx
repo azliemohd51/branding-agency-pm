@@ -1,4 +1,4 @@
-// Version: 1.0
+// Version: 1.6
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
@@ -6,12 +6,11 @@ import { listTasks, listClients, listProjects, listDesigners } from "@/lib/queri
 import { TopBar } from "@/components/TopBar";
 import { PageHeader } from "@/components/PageHeader";
 import { TaskCard } from "@/components/TaskCard";
-import { CheckSquare, Filter, Plus, Hash } from "lucide-react";
+import { Inbox, Filter, Hash } from "lucide-react";
 import { NewTaskQuick } from "@/components/NewTaskQuick";
 
 const FILTERS = [
   { key: "all", label: "All" },
-  { key: "project", label: "Projects" },
   { key: "social_media", label: "Social Media" },
   { key: "adhoc", label: "Ad-hoc" },
 ];
@@ -28,7 +27,12 @@ export default async function TasksPage({
   const scope = sp.scope === "all" && user.role === "admin" ? "all" : "mine";
   const category = sp.category && sp.category !== "all" ? sp.category : undefined;
 
-  const baseFilter = scope === "mine" ? { assigneeId: user.id, category } : { category };
+  // Inbox = non-project tasks only (social_media + adhoc)
+  const baseFilter = {
+    excludeProject: true,
+    ...(scope === "mine" ? { assigneeId: user.id } : {}),
+    ...(category ? { category } : {}),
+  };
   const tasks = listTasks(baseFilter);
 
   const projects = listProjects();
@@ -40,12 +44,27 @@ export default async function TasksPage({
 
   return (
     <>
-      <TopBar user={user} title="Tasks" subtitle={scope === "mine" ? "Your personal queue" : "All team tasks"} />
+      <TopBar
+        user={user}
+        title="Inbox"
+        subtitle={
+          scope === "mine"
+            ? "Tasks not tied to a specific project"
+            : "All team inbox tasks (social + ad-hoc)"
+        }
+      />
       <main className="p-6 max-w-7xl mx-auto w-full">
         <PageHeader
-          title={scope === "mine" ? "My Tasks" : "All Tasks"}
-          subtitle={`${tasks.length} task${tasks.length === 1 ? "" : "s"}`}
-          actions={<NewTaskQuick designers={designers} projects={projects} defaultAssignee={user.id} />}
+          title="Inbox"
+          subtitle="Social media, ad-hoc, and other work that doesn't belong to a specific brand project. Project tasks live inside their project."
+          actions={
+            <NewTaskQuick
+              designers={designers}
+              projects={projects}
+              defaultAssignee={user.id}
+              inboxOnly
+            />
+          }
         />
 
         {/* Filters */}
@@ -54,14 +73,17 @@ export default async function TasksPage({
             <Filter size={14} className="text-ink-3" />
             {FILTERS.map((f) => {
               const active = (f.key === "all" && !category) || f.key === category;
-              const href = `/tasks${f.key === "all" ? "" : `?category=${f.key}`}${scope === "all" ? (f.key === "all" ? "?scope=all" : "&scope=all") : ""}`;
+              const params = new URLSearchParams();
+              if (f.key !== "all") params.set("category", f.key);
+              if (scope === "all") params.set("scope", "all");
+              const href = "/tasks" + (params.toString() ? `?${params}` : "");
               return (
                 <Link
                   key={f.key}
                   href={href}
                   className={`pill transition ${
                     active
-                      ? "bg-accent/20 border-accent/40 text-accent"
+                      ? "bg-accent/15 border-accent/40 text-accent"
                       : "border-line bg-bg-1 text-ink-2 hover:bg-bg-2 hover:text-ink-0"
                   }`}
                 >
@@ -92,15 +114,18 @@ export default async function TasksPage({
 
         {tasks.length === 0 ? (
           <div className="card p-12 text-center bg-dotgrid">
-            <CheckSquare size={28} className="mx-auto text-ink-3 mb-3" />
+            <Inbox size={28} className="mx-auto text-ink-3 mb-3" />
             <div className="text-base font-semibold">Inbox zero.</div>
-            <div className="text-sm text-ink-2 mt-1">Nothing here right now.</div>
+            <div className="text-sm text-ink-2 mt-1 max-w-md mx-auto">
+              Use this for social media content, internal admin tasks, or anything else
+              that isn't tied to a brand project.
+            </div>
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-4">
             <Column label="Todo" color="#71717a" tasks={todo} />
-            <Column label="In progress" color="#3b82f6" tasks={inProg} />
-            <Column label="Done" color="#22c55e" tasks={done} />
+            <Column label="Working on it" color="#fdab3d" tasks={inProg} />
+            <Column label="Done" color="#00c875" tasks={done} />
           </div>
         )}
       </main>

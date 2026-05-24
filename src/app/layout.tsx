@@ -1,4 +1,4 @@
-// Version: 1.5
+// Version: 1.6
 import type { Metadata } from "next";
 import "./globals.css";
 
